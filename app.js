@@ -11,8 +11,11 @@ class TaskManager {
         this.currentSort = 'created';
         this.searchQuery = '';
         this.editingTaskId = null;
+        this.deletedTask = null;
+        this.undoTimeout = null;
         
         this.initializeElements();
+        this.initializeTheme();
         this.bindEvents();
         this.render();
     }
@@ -55,6 +58,59 @@ class TaskManager {
         this.editDescriptionInput = document.getElementById('edit-description');
         this.modalCloseBtn = document.getElementById('modal-close');
         this.cancelEditBtn = document.getElementById('cancel-edit');
+
+        // Theme toggle
+        this.themeToggle = document.getElementById('theme-toggle');
+        this.themeIcon = this.themeToggle ? this.themeToggle.querySelector('.theme-icon') : null;
+
+        // Progress elements
+        this.progressFill = document.getElementById('progress-fill');
+        this.progressPercentage = document.getElementById('progress-percentage');
+
+        // Undo elements
+        this.undoToast = document.getElementById('undo-toast');
+        this.undoMessage = document.getElementById('undo-message');
+        this.undoBtn = document.getElementById('undo-btn');
+    }
+
+    // Initialize theme based on saved preference or system preference
+    initializeTheme() {
+        const savedTheme = localStorage.getItem('todo-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            this.updateThemeIcon(savedTheme);
+        } else if (prefersDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            this.updateThemeIcon('dark');
+        }
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('todo-theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                this.updateThemeIcon(newTheme);
+            }
+        });
+    }
+
+    // Update theme icon based on current theme
+    updateThemeIcon(theme) {
+        if (this.themeIcon) {
+            this.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    }
+
+    // Toggle theme
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('todo-theme', newTheme);
+        this.updateThemeIcon(newTheme);
     }
 
     // Bind event listeners
@@ -96,16 +152,40 @@ class TaskManager {
             if (e.target === this.editModal) this.closeModal();
         });
 
+        // Theme toggle
+        if (this.themeToggle) {
+            this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Undo button
+        this.undoBtn.addEventListener('click', () => this.undoDelete());
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // Escape to close modal
             if (e.key === 'Escape' && this.editModal.classList.contains('show')) {
                 this.closeModal();
+            }
+            
+            // 'n' to focus on task input (when not in an input field)
+            if (e.key === 'n' && !this.isInputFocused()) {
+                e.preventDefault();
+                this.taskTitleInput.focus();
             }
         });
 
         // Task list event delegation
         this.taskList.addEventListener('click', (e) => this.handleTaskListClick(e));
         this.taskList.addEventListener('change', (e) => this.handleTaskCheckbox(e));
+    }
+
+    // Check if user is currently focused on an input element
+    isInputFocused() {
+        const activeElement = document.activeElement;
+        return activeElement.tagName === 'INPUT' || 
+               activeElement.tagName === 'TEXTAREA' || 
+               activeElement.tagName === 'SELECT' ||
+               activeElement.isContentEditable;
     }
 
     // Load tasks from localStorage
@@ -235,13 +315,64 @@ class TaskManager {
         this.render();
     }
 
-    // Delete a task
+    // Delete a task with undo support
     deleteTask(taskId) {
-        if (!confirm('Are you sure you want to delete this task?')) return;
-
-        this.tasks = this.tasks.filter(t => t.id !== taskId);
+        const taskIndex = this.tasks.findIndex(t => t.id === taskId);
+        if (taskIndex === -1) return;
+        
+        // Store the deleted task for potential undo
+        this.deletedTask = {
+            task: this.tasks[taskIndex],
+            index: taskIndex
+        };
+        
+        // Remove the task
+        this.tasks.splice(taskIndex, 1);
         this.saveTasks();
         this.render();
+        
+        // Show undo toast
+        this.showUndoToast('Task deleted');
+    }
+
+    // Show undo toast
+    showUndoToast(message) {
+        // Clear any existing timeout
+        if (this.undoTimeout) {
+            clearTimeout(this.undoTimeout);
+        }
+        
+        this.undoMessage.textContent = message;
+        this.undoToast.classList.add('show');
+        
+        // Hide after 5 seconds
+        this.undoTimeout = setTimeout(() => {
+            this.hideUndoToast();
+        }, 5000);
+    }
+
+    // Hide undo toast
+    hideUndoToast() {
+        this.undoToast.classList.remove('show');
+        this.deletedTask = null;
+    }
+
+    // Undo the last delete action
+    undoDelete() {
+        if (!this.deletedTask) return;
+        
+        // Restore the task at its original position
+        this.tasks.splice(this.deletedTask.index, 0, this.deletedTask.task);
+        this.saveTasks();
+        this.render();
+        
+        // Hide the undo toast
+        if (this.undoTimeout) {
+            clearTimeout(this.undoTimeout);
+        }
+        this.hideUndoToast();
+        
+        this.showNotification('Task restored');
     }
 
     // Clear completed tasks
@@ -378,6 +509,16 @@ class TaskManager {
         this.activeTasksEl.textContent = active;
         this.completedTasksEl.textContent = completed;
         this.overdueTasksEl.textContent = overdue;
+
+        // Update progress bar
+        this.updateProgressBar(total, completed);
+    }
+
+    // Update progress bar
+    updateProgressBar(total, completed) {
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        this.progressFill.style.width = `${percentage}%`;
+        this.progressPercentage.textContent = `${percentage}%`;
     }
 
     // Escape HTML to prevent XSS
