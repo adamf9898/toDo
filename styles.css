@@ -29,6 +29,9 @@
 
     --gradient-start: #667eea;
     --gradient-end: #764ba2;
+
+    --toast-bg: #1e293b;
+    --toast-text: #ffffff;
 }
 
 /* Dark mode variables */
@@ -54,6 +57,9 @@
 
     --gradient-start: #312e81;
     --gradient-end: #4c1d95;
+
+    --toast-bg: #1e293b;
+    --toast-text: #ffffff;
 }
 
 /* Reset and Base Styles */
@@ -796,8 +802,8 @@ body {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--text-primary);
-    color: white;
+    background: var(--toast-bg);
+    color: var(--toast-text);
     padding: 12px 24px;
     border-radius: var(--border-radius-sm);
     box-shadow: var(--shadow-lg);
@@ -841,8 +847,8 @@ body {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--text-primary);
-    color: white;
+    background: var(--toast-bg);
+    color: var(--toast-text);
     padding: 12px 20px;
     border-radius: var(--border-radius-sm);
     box-shadow: var(--shadow-lg);
