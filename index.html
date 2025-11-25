@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>toDo - Task Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">✓</span>
+                <h1>toDo</h1>
+            </div>
+            <p class="tagline">Organize your life, one task at a time</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Add Task Section -->
+            <section class="add-task-section">
+                <form id="task-form" class="task-form">
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="task-title" 
+                            class="task-input" 
+                            placeholder="What needs to be done?" 
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="task-priority">Priority</label>
+                            <select id="task-priority" class="task-select">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-due-date">Due Date</label>
+                            <input type="date" id="task-due-date" class="task-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="task-category">Category</label>
+                            <select id="task-category" class="task-select">
+                                <option value="personal">Personal</option>
+                                <option value="work">Work</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="health">Health</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <textarea 
+                            id="task-description" 
+                            class="task-textarea" 
+                            placeholder="Add a description (optional)"
+                            rows="2"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-icon">+</span>
+                        Add Task
+                    </button>
+                </form>
+            </section>
+
+            <!-- Filter and Search Section -->
+            <section class="filter-section">
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="search-input" 
+                        placeholder="Search tasks..."
+                    >
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+                <div class="sort-dropdown">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select" class="sort-select">
+                        <option value="created">Date Created</option>
+                        <option value="due">Due Date</option>
+                        <option value="priority">Priority</option>
+                        <option value="alphabetical">Alphabetical</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Task Stats -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <span class="stat-number" id="total-tasks">0</span>
+                    <span class="stat-label">Total Tasks</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="active-tasks">0</span>
+                    <span class="stat-label">Active</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="completed-tasks">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="overdue-tasks">0</span>
+                    <span class="stat-label">Overdue</span>
+                </div>
+            </section>
+
+            <!-- Task List -->
+            <section class="task-list-section">
+                <ul id="task-list" class="task-list">
+                    <!-- Tasks will be dynamically inserted here -->
+                </ul>
+                <div id="empty-state" class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <h3>No tasks yet</h3>
+                    <p>Add your first task to get started!</p>
+                </div>
+            </section>
+
+            <!-- Bulk Actions -->
+            <section class="bulk-actions" id="bulk-actions">
+                <button class="btn btn-secondary" id="clear-completed">
+                    Clear Completed
+                </button>
+                <button class="btn btn-danger" id="clear-all">
+                    Clear All Tasks
+                </button>
+            </section>
+        </main>
+
+        <!-- Edit Task Modal -->
+        <div id="edit-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Edit Task</h2>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <form id="edit-form" class="edit-form">
+                    <input type="hidden" id="edit-task-id">
+                    <div class="form-group">
+                        <label for="edit-title">Title</label>
+                        <input type="text" id="edit-title" class="task-input" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-priority">Priority</label>
+                            <select id="edit-priority" class="task-select">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-due-date">Due Date</label>
+                            <input type="date" id="edit-due-date" class="task-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-category">Category</label>
+                            <select id="edit-category" class="task-select">
+                                <option value="personal">Personal</option>
+                                <option value="work">Work</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="health">Health</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-description">Description</label>
+                        <textarea id="edit-description" class="task-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-edit">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <p>&copy; 2024 toDo App. Stay organized, stay productive.</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
