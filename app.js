@@ -61,7 +61,7 @@ class TaskManager {
 
         // Theme toggle
         this.themeToggle = document.getElementById('theme-toggle');
-        this.themeIcon = this.themeToggle.querySelector('.theme-icon');
+        this.themeIcon = this.themeToggle ? this.themeToggle.querySelector('.theme-icon') : null;
 
         // Progress elements
         this.progressFill = document.getElementById('progress-fill');
@@ -98,7 +98,9 @@ class TaskManager {
 
     // Update theme icon based on current theme
     updateThemeIcon(theme) {
-        this.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        if (this.themeIcon) {
+            this.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
     }
 
     // Toggle theme
@@ -151,7 +153,9 @@ class TaskManager {
         });
 
         // Theme toggle
-        this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        if (this.themeToggle) {
+            this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
 
         // Undo button
         this.undoBtn.addEventListener('click', () => this.undoDelete());
